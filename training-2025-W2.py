@@ -324,7 +324,7 @@ if __name__ == "__main__":
     #multiprocessing.set_start_method("spawn")
 
     # Config
-    config = load_config('experiments/2025-W2-01-08/configs/RegNet_002.yaml')
+    config = load_config('experiments/2025-W2-01-08/configs/VIT_base_patch16_224.yaml')
     print('Config is loaded..')
 
     train(config)

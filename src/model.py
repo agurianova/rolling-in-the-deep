@@ -20,23 +20,32 @@ def create_model(model_name, num_classes, num_input_channels):
             padding=model.conv_stem.padding,
             bias=model.conv_stem.bias
         )
-    elif hasattr(model, 'conv1'):  #ResNet
-        model.conv1 = nn.Conv2d(
+    elif hasattr(model, 'stem'):  # RegNet
+        model.stem.conv = nn.Conv2d(
             in_channels=num_input_channels, 
-            out_channels=model.conv1.out_channels,
-            kernel_size=model.conv1.kernel_size,
-            stride=model.conv1.stride,
-            padding=model.conv1.padding,
-            bias=model.conv1.bias
+            out_channels=model.stem.conv.out_channels,
+            kernel_size=model.stem.conv.kernel_size,
+            stride=model.stem.conv.stride,
+            padding=model.stem.conv.padding,
+            bias=model.stem.conv.bias
         )
     elif hasattr(model, 'patch_embed'):  # Vision Transformer (ViT)
+        # Extract attributes safely
+        in_channels = num_input_channels
+        out_channels = model.patch_embed.proj.out_channels
+        kernel_size = model.patch_embed.proj.kernel_size
+        stride = model.patch_embed.proj.stride
+        padding = model.patch_embed.proj.padding
+        bias = model.patch_embed.proj.bias
+
+        # Replace the layer
         model.patch_embed.proj = nn.Conv2d(
-            in_channels=num_input_channels, 
-            out_channels=model.patch_embed.proj.out_channels,
-            kernel_size=model.patch_embed.proj.kernel_size,
-            stride=model.patch_embed.proj.stride,
-            padding=model.patch_embed.proj.padding,
-            bias=model.patch_embed.proj.bias
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            bias=bias
         )
     elif hasattr(model, 'Conv2d_1a_3x3'):  # Inception V3
         model.Conv2d_1a_3x3.conv = nn.Conv2d(
