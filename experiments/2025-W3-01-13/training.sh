@@ -9,5 +9,5 @@
 #SBATCH -t 0
 #SBATCH -G 2
 
-#export PYTHONPATH=$(pwd)/src:$PYTHONPATH # from rolling-in-the-deep
+#export PYTHONPATH=$(pwd):$PYTHONPATH # from rolling-in-the-deep
 python training.py

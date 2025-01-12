@@ -1,5 +1,5 @@
 data:
-  dir: '/Users/lune/ISP/rolling-in-the-deep/data/deepvariant/data_subset_1000_val.csv'
+  dir: '/Users/lune/ISP/rolling-in-the-deep/data/deepvariant/data_subset_1000_train.csv'
 
 cross_val_folds: 2
 

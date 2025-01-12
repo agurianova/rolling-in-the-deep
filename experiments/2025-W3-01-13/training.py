@@ -1,5 +1,6 @@
 import sys
 import os
+import argparse
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
@@ -16,7 +17,7 @@ from torchvision import transforms as T
 from torchvision.utils import make_grid
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.utils.class_weight import compute_class_weight
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from tqdm import tqdm
 import yaml
 import pickle
@@ -65,21 +66,24 @@ def training(config):
     ])
 
     dataset = Dataset(csv_file=csv, transform=transform)
+    dataset_y_true = [dataset[i][1] for i in range(len(dataset))]
 
     # 3. 🍰 K-fold cross validation
     #  config parameters for this part ࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐
     k_folds = config['cross_val_folds'] #                                                                              .
     # ࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐
 
-    kf = KFold(n_splits=k_folds, shuffle=True, random_state=42)
+    skf = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=42)
     
     # ⭐️ as alternative for tensorboard
     results = {
         'folds': []
         }
 
-    for fold, (train_idx, val_idx) in enumerate(kf.split(dataset)):
+    for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(dataset_y_true)), dataset_y_true)):
         print(f"Fold {fold + 1}/{k_folds}")
+
+        print(train_idx)
 
         # ⭐️
         fold_results = {
@@ -87,10 +91,28 @@ def training(config):
         'epochs': []
         }
 
+        print(np.unique([y_true for image, y_true in dataset]))
 
         # 1. 🗂/🗂 Train-Val split 
         dataset_t = torch.utils.data.Subset(dataset, train_idx)
+        
+        class_counts = {}
+        for _, y_true in dataset_t:
+            label = int(y_true)
+            if label not in class_counts:
+                class_counts[label] = 0
+            class_counts[label] += 1
+        print("Training distribution:", class_counts)
+        
         dataset_v = torch.utils.data.Subset(dataset, val_idx)
+
+        class_counts = {}
+        for _, y_true in dataset_v:
+            label = int(y_true)
+            if label not in class_counts:
+                class_counts[label] = 0
+            class_counts[label] += 1
+        print("Validation distribution:", class_counts)
 
 
         # 2. 🧺 Loader
@@ -342,7 +364,7 @@ def training(config):
             epoch_results['validation']['accuracy'] = accuracy
             epoch_results['validation']['precision'] = precision
             epoch_results['validation']['recall'] = recall
-            epoch_results['tvalidation']['f1'] = f1
+            epoch_results['validation']['f1'] = f1
             epoch_results['validation']['auc_ovr'] = auc_ovr
             epoch_results['validation']['auc_ovo'] = auc_ovo
 
@@ -386,14 +408,14 @@ def training(config):
 
             scheduler.step() # adjust the learning rate
         
-        # ⭐️
-        fold_results['epochs'].append(epoch_results)
+            # ⭐️
+            fold_results['epochs'].append(epoch_results)
         
-    writer.close()
-    
-    # ⭐️
-    results['folds'].append(fold_results)
+        # ⭐️
+        results['folds'].append(fold_results)
 
+    writer.close()
+        
     print(results)
 
     pickle_path = config['pickle_path']
@@ -403,9 +425,13 @@ def training(config):
 
 if __name__ == "__main__":
 
-    # Config
-    # (I`ll realize it with arg parse later)
-    config = load_config('experiments/2025-W3-01-13/configs/EfficientNet_b0.yaml')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config',type=str)
+    args = parser.parse_args()
+
+    config = load_config(args.config) #'experiments/2025-W3-01-13/configs/EfficientNet_b0.yaml'
     print('Config is loaded..')
 
     training(config)
+
+    #python experiments/2025-W3-01-13/training.py --config experiments/2025-W3-01-13/configs/EfficientNet_b0.yaml
