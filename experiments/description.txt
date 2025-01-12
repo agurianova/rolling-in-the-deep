@@ -1,0 +1,2 @@
+2025-W2-01-08 - locally tried 3 NN on 1000 (800/200) samples
+2025-W2-01-09 - on cluster tried 3 NN on 20000 (16000/4000) samples

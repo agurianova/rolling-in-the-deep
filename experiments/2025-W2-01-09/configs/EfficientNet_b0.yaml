@@ -1,0 +1,37 @@
+data:
+  #dataset_dir: "/Users/lune/ISP/rolling-in-the-deep/datasets/deepvariant"
+  #dataset_subset_size: 1000 
+  #dataset_split_train_fraction: 0.8 ***NOW REALIZED AS CSV***
+  dir:
+    train: '/Users/lune/ISP/rolling-in-the-deep/data/deepvariant/data_subset_20000_train_0.8.csv'
+    val: '/Users/lune/ISP/rolling-in-the-deep/data/deepvariant/data_subset_20000_val_0.2.csv'
+
+dataset_T:
+  padding: [1, 62, 2, 62] 
+  normalization:
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+
+dataloader:
+  batch_size: 32
+  num_workers: 4
+
+model:
+  name: "efficientnet_b0"
+  classes: 3
+  channels: 7
+
+training:
+  hyper:
+    loss:
+      type: "CrossEntropyLoss"
+    optimizer:
+      type: "Adam"
+      lr: 0.001
+    scheduler:
+      type: "StepLR"  
+      step_size: 5 
+      gamma: 0.1
+  num_epochs: 10 
+  tensorboard: true
+  tensorboard_dir: "experiments/2025-W2-01-09/runs/EfficientNet_b0"
