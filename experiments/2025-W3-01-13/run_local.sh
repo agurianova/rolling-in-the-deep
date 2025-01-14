@@ -1,0 +1,1 @@
+python experiments/2025-W3-01-13/training.py --config experiments/2025-W3-01-13/configs/EfficientNet_b0.yaml

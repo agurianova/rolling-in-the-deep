@@ -1,7 +1,7 @@
 data:
-  dir: '/Users/lune/ISP/rolling-in-the-deep/data/deepvariant/data_subset_1000_train.csv'
+  dir: '/Users/lune/ISP/rolling-in-the-deep/data/deepvariant/data_subset_1000_train.csv' #!
 
-cross_val_folds: 2
+cross_val_folds: 2 #!
 
 dataset_T:
   padding: [1, 62, 2, 62] 
@@ -11,7 +11,7 @@ dataloader:
   num_workers: 4
 
 model:
-  name: "efficientnet_b0"
+  name: "efficientnet_b0" #!
   classes: 3
   channels: 7
 
@@ -26,8 +26,8 @@ training:
       type: "StepLR"  
       step_size: 5 
       gamma: 0.1
-  num_epochs: 1 
-  tensorboard: true
-  tensorboard_dir: "experiments/2025-W3-01-13/runs/EfficientNet_b0"
+  num_epochs: 1 #!
+  tensorboard: false #!
+  tensorboard_dir: "experiments/2025-W3-01-13/tb/EfficientNet_b0" #!
 
-pickle_path: "experiments/2025-W3-01-13/results/results.pkl"
+pickle_path: "experiments/2025-W3-01-13/results/EfficientNet_b0/results.pkl" #!

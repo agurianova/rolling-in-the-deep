@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms as T
 from torchvision.utils import make_grid
-from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, matthews_corrcoef
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.model_selection import StratifiedKFold
 from tqdm import tqdm
@@ -186,7 +186,8 @@ def training(config):
                     'recall': [],
                     'f1': [],
                     'auc_ovr': [],
-                    'auc_ovo': []
+                    'auc_ovo': [],
+                    'mcc': []
                 },
                 'validation': {
                     'loss': [],
@@ -195,7 +196,8 @@ def training(config):
                     'recall': [],
                     'f1': [],
                     'auc_ovr': [],
-                    'auc_ovo': []
+                    'auc_ovo': [],
+                    'mcc': []
                 }
             }
 
@@ -261,6 +263,9 @@ def training(config):
             # 🔸 auc
             auc_ovr = roc_auc_score(run_y_true, run_y_prob, multi_class='ovr') # macro-averaging by default - arithm mean, each class is treated equally 
             auc_ovo = roc_auc_score(run_y_true, run_y_prob, multi_class='ovo')
+            # 🔸 mcc
+            mcc = matthews_corrcoef(y_true, y_pred)
+
             # ------------------------------------------------------------------------------------- #
 
             # print
@@ -275,6 +280,7 @@ def training(config):
                 writer.add_scalar('train_metrics/f1', f1, epoch+1)
                 writer.add_scalar('train_metrics/auc_ovr' , auc_ovr, epoch+1)
                 writer.add_scalar('train_metrics/auc_ovo' , auc_ovo, epoch+1)
+                writer.add_scalar('train_metrics/mcc' , mcc, epoch+1)
 
             # ⭐️
             epoch_results['training']['loss'] = loss   
@@ -284,6 +290,7 @@ def training(config):
             epoch_results['training']['f1'] = f1
             epoch_results['training']['auc_ovr'] = auc_ovr
             epoch_results['training']['auc_ovo'] = auc_ovo
+            epoch_results['training']['mcc'] = mcc
             
 
             # 2. ❓ Validation
@@ -349,6 +356,8 @@ def training(config):
             # 🔸 auc
             auc_ovr = roc_auc_score(run_y_true, run_y_prob, multi_class='ovr') # macro-averaging by default - arithm mean, each class is treated equally 
             auc_ovo = roc_auc_score(run_y_true, run_y_prob, multi_class='ovo')
+            # 🔸 mcc
+            mcc = matthews_corrcoef(y_true, y_pred)
 
             if tb: # 📍
                 writer.add_scalar('val_metrics/loss', loss, epoch+1)
@@ -358,6 +367,7 @@ def training(config):
                 writer.add_scalar('val_metrics/f1', f1, epoch+1)
                 writer.add_scalar('val_metrics/auc_ovr' , auc_ovr, epoch+1)
                 writer.add_scalar('val_metrics/auc_ovo' , auc_ovo, epoch+1)
+                writer.add_scalar('val_metrics/mcc' , mcc, epoch+1)
 
             # ⭐️
             epoch_results['validation']['loss'] = loss   
@@ -367,6 +377,7 @@ def training(config):
             epoch_results['validation']['f1'] = f1
             epoch_results['validation']['auc_ovr'] = auc_ovr
             epoch_results['validation']['auc_ovo'] = auc_ovo
+            epoch_results['validation']['mcc'] = mcc
 
             # 🔸 confusion matrix for the last epoch
             if epoch+1 == epochs:
