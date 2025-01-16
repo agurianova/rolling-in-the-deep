@@ -47,7 +47,9 @@ def training(config):
     # ࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐
 
     seed_everything(seed = 42) # random.seed etc 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print(device)
+    
     if tb: #📍 (futher all tb writings are highlighed with 📍)
         writer = SummaryWriter(config['training']['tensorboard_dir'])
 
@@ -83,19 +85,18 @@ def training(config):
     for fold, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(dataset_y_true)), dataset_y_true)):
         print(f"Fold {fold + 1}/{k_folds}")
 
-        print(train_idx)
-
         # ⭐️
         fold_results = {
         'fold': fold,
         'epochs': []
         }
 
-        print(np.unique([y_true for image, y_true in dataset]))
 
         # 1. 🗂/🗂 Train-Val split 
         dataset_t = torch.utils.data.Subset(dataset, train_idx)
         
+
+        ## (Training/Validation distribution)
         class_counts = {}
         for _, y_true in dataset_t:
             label = int(y_true)
@@ -161,6 +162,7 @@ def training(config):
         # and number if classes (there are 3 classes: 0, 1, 2)
         dataset_t_classes = np.unique(dataset_t_y_true)
         class_weights = torch.tensor(compute_class_weight(class_weight='balanced', classes=dataset_t_classes, y=dataset_t_y_true), dtype=torch.float32) # balanced mean - calculates weights inversely (N/k*n)
+        class_weights = class_weights.to(device)
         criterion = nn.CrossEntropyLoss(weight=class_weights) if loss == 'CrossEntropyLoss' else None
         # 🔹 param optimizer
         optimizer = optim.Adam(model.parameters(), lr=lr) if optimizer_type == 'Adam' else None
@@ -264,7 +266,7 @@ def training(config):
             auc_ovr = roc_auc_score(run_y_true, run_y_prob, multi_class='ovr') # macro-averaging by default - arithm mean, each class is treated equally 
             auc_ovo = roc_auc_score(run_y_true, run_y_prob, multi_class='ovo')
             # 🔸 mcc
-            mcc = matthews_corrcoef(y_true, y_pred)
+            mcc = matthews_corrcoef(run_y_true, run_y_pred)
 
             # ------------------------------------------------------------------------------------- #
 
@@ -357,7 +359,7 @@ def training(config):
             auc_ovr = roc_auc_score(run_y_true, run_y_prob, multi_class='ovr') # macro-averaging by default - arithm mean, each class is treated equally 
             auc_ovo = roc_auc_score(run_y_true, run_y_prob, multi_class='ovo')
             # 🔸 mcc
-            mcc = matthews_corrcoef(y_true, y_pred)
+            mcc = matthews_corrcoef(run_y_true, run_y_pred)
 
             if tb: # 📍
                 writer.add_scalar('val_metrics/loss', loss, epoch+1)
@@ -425,7 +427,8 @@ def training(config):
         # ⭐️
         results['folds'].append(fold_results)
 
-    writer.close()
+    if tb:
+        writer.close()
         
     print(results)
 

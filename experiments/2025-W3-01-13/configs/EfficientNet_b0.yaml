@@ -1,7 +1,7 @@
 data:
-  dir: '/Users/lune/ISP/rolling-in-the-deep/data/deepvariant/data_subset_1000_train.csv' #!
+  dir: '/data/glusterfs/agurianova/rolling-in-the-deep/data/deepvariant/data_subset_20000.csv' #!
 
-cross_val_folds: 2 #!
+cross_val_folds: 10 #!
 
 dataset_T:
   padding: [1, 62, 2, 62] 
@@ -26,8 +26,8 @@ training:
       type: "StepLR"  
       step_size: 5 
       gamma: 0.1
-  num_epochs: 1 #!
-  tensorboard: false #!
-  tensorboard_dir: "experiments/2025-W3-01-13/tb/EfficientNet_b0" #!
+  num_epochs: 10 #!
+  tensorboard: true #!
+  tensorboard_dir: "/data/glusterfs/agurianova/rolling-in-the-deep/experiments/2025-W3-01-13/tb/EfficientNet_b0" #!
 
-pickle_path: "experiments/2025-W3-01-13/results/EfficientNet_b0/results.pkl" #!
+pickle_path: "/data/glusterfs/agurianova/rolling-in-the-deep/experiments/2025-W3-01-13/results/EfficientNet_b0.pkl" #!
