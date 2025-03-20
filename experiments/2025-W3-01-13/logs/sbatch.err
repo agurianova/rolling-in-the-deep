@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "/data/glusterfs/agurianova/rolling-in-the-deep/experiments/2025-W3-01-13/training.py", line 10, in <module>
-    import torch
-  File "/data/glusterfs/agurianova/rolling-in-the-deep/venv/lib/python3.11/site-packages/torch/__init__.py", line 290, in <module>
-    from torch._C import *  # noqa: F403
-    ^^^^^^^^^^^^^^^^^^^^^^
-ImportError: /data/glusterfs/agurianova/rolling-in-the-deep/venv/lib/python3.11/site-packages/torch/lib/../../nvidia/cusparse/lib/libcusparse.so.12: undefined symbol: __nvJitLinkAddData_12_1, version libnvJitLink.so.12

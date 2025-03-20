@@ -1,6 +1,6 @@
 docker build -t sunny:0.1 .
 
-docker run --rm -it --gpus=0 --ipc=host \
+docker run --rm -itd --gpus=0 --ipc=host \
 	-v /data/glusterfs/agurianova/:/data/glusterfs/agurianova/ \
 	-w /data/glusterfs/agurianova/rolling-in-the-deep \
 	sunny:0.1 \
