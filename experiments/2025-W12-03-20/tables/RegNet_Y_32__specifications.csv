@@ -1,0 +1,3 @@
+Specification,Inception V3,RegNet Y 32
+Parameters,27.2M,145.0M
+Inference time,0.2212 ± 0.0025,0.7876 ± 0.0060 ↑

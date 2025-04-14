@@ -1,0 +1,4 @@
+Specification,Inception V3,ResNeXt101 64X4D
+Parameters,27.2M,83.5M
+Inference time,0.2212 ± 0.0025,1.0338 ± 0.0123 ↑
+

@@ -1,0 +1,3 @@
+Specification,Inception V3,EfficientNet b7
+Parameters,27.2M,66.3M
+Inference time,0.2212 ± 0.0025,0.7897 ± 0.0116 ↑
