@@ -1,4 +1,0 @@
-2025-W2-01-08 - locally tried 3 NN on 1000 (800/200) samples
-2025-W2-01-09 - on cluster tried 3 NN on 20000 (16000/4000) samples
-2025-W3-01-13 - locally k-fold cv, venv, src lib
-2025-W8-02-20 - on cluster, docker, k-fold cv, 20000 of samples

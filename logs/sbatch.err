@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "experiments/2025-W3-01-13/training.py", line 16, in <module>
-    from torchvision import transforms as T
-ModuleNotFoundError: No module named 'torchvision'
