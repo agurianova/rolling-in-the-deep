@@ -21,7 +21,9 @@ def dataset_mean_std(csv, padding):
     padding_transform = T.Compose([
         T.Pad(padding)
     ])
+    print('Pad')
     dataset_padded = Dataset(csv_file=csv, transform=padding_transform)
+    print('Loader')
     loader = DataLoader(dataset_padded, batch_size=64, shuffle=False)
 
     channel_sum = 0
@@ -37,5 +39,5 @@ def dataset_mean_std(csv, padding):
 
     mean = channel_sum / num_pixels
     std = ((channel_squared_sum / num_pixels) - (mean ** 2)).sqrt()
-
+    print(f'mean {mean} and std {std} calculated')
     return(mean, std)

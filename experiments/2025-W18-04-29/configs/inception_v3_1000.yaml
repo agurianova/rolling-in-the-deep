@@ -1,7 +1,7 @@
 data:
-  dir: 'data/deepvariant/images20k/data_subset_1000.csv' #!
+  dir: '/data/glusterfs/agurianova/data/deepvariant/images20k/data_subset_1000.csv' #!
 
-cross_val_folds: 6 #!
+cross_val_folds: 2 #!
 
 dataset_T:
   padding: [1, 62, 2, 62] 

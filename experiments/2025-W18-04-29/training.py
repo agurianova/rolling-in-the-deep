@@ -18,10 +18,11 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler  # 🪄
 from torch.utils.tensorboard import SummaryWriter
 import torch.multiprocessing as mp # 🪄
-from torch.distributed import init_process_group, destroy_process_group # 🪄
+from torch.distributed import init_process_group, destroy_process_group, get_rank # 🪄
+import torch.distributed as dist
 from torchvision import transforms as T
 from torchvision.utils import make_grid
-from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, matthews_corrcoef
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, matthews_corrcoef
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.model_selection import StratifiedKFold
 from tqdm import tqdm
@@ -44,7 +45,7 @@ def load_config(config_path):
 
 
 
-def training(config, rank, world_size):
+def training(rank, config, world_size):
 
 
 
@@ -71,12 +72,14 @@ def training(config, rank, world_size):
     # ࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐
 
     # calculate mean and std on a given dataset
+    print("Find mean, std..")
     mean, std = dataset_mean_std(csv, padding) # padding will fit image from 100x221 to 224x224
     transform = T.Compose([
         T.Pad(padding),
         T.Normalize(mean, std)
     ])
 
+    print("Dataset..")
     dataset = Dataset(csv_file=csv, transform=transform)
     dataset_y_true = [dataset[i][1] for i in range(len(dataset))]
 
@@ -134,8 +137,8 @@ def training(config, rank, world_size):
         num_workers = config['dataloader']['num_workers'] #                                                                 .
         # ࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐
 
-        loader_t = DataLoader(dataset_t, batch_size=batch_size, shuffle=True, num_workers=num_workers, sampler=DistributedSampler(dataset_t, num_replicas=world_size, rank=rank)) # 🪄
-        loader_v = DataLoader(dataset_v, batch_size=batch_size, shuffle=False, num_workers=num_workers, sampler=DistributedSampler(dataset_v, num_replicas=world_size, rank=rank)) # 🪄  
+        loader_t = DataLoader(dataset_t, batch_size=batch_size, num_workers=num_workers, sampler=DistributedSampler(dataset_t, num_replicas=world_size, rank=rank, shuffle=True)) # 🪄
+        loader_v = DataLoader(dataset_v, batch_size=batch_size, num_workers=num_workers, sampler=DistributedSampler(dataset_v, num_replicas=world_size, rank=rank, shuffle=False)) # 🪄  
 
 
         # 3. 🪷 Model
@@ -256,68 +259,100 @@ def training(config, rank, world_size):
 
                 # ----------- ✍ batch record ------------- #
                 #run_images.append(images.cpu().numpy())     #
-                run_y_true.append(y_true.detach().cpu().numpy())     #
-                run_y_prob.append(y_prob.detach().cpu().detach().numpy())     #
-                run_y_pred.append(y_pred.detach().cpu().numpy())     #
+                run_y_true.append(y_true.detach())     #
+                run_y_prob.append(y_prob.detach())     #
+                run_y_pred.append(y_pred.detach())     #
                 run_loss += loss.item()                     #
                 # ----------------------------------------- #
 
 
             # --------------------------------- ✍ run record - metrics ---------------------------------- #
             #run_images = np.concatenate(run_images)
-            run_y_true = np.concatenate(run_y_true)
-            run_y_prob = np.concatenate(run_y_prob)
-            run_y_pred = np.concatenate(run_y_pred)
-            end_time = time.time()
+            run_y_true = torch.cat(run_y_true, dim=0)
+            run_y_prob = torch.cat(run_y_prob, dim=0)
+            run_y_pred = torch.cat(run_y_pred, dim=0)
+            run_loss_tensor = torch.tensor([run_loss / len(loader)], device=device)
+            elapsed_time = torch.tensor([(time.time() - start_time) / 60], device=device)
 
+            # -------- Distributed Gathering -------- #
+            local_size = torch.tensor([run_y_true.size(0)], device=device)
+            sizes_list = [torch.zeros_like(local_size) for _ in range(world_size)]
+            dist.all_gather(sizes_list, local_size)
+            max_size = max([s.item() for s in sizes_list])
 
-            # 🔸 loss
-            run_loss = run_loss / len(loader)
-            # 🔸 accuracy
-            correct_predictions = sum(1 for true, pred in zip(run_y_true, run_y_pred) if true == pred)
-            accuracy = correct_predictions / len(run_y_true)
-            # 🔸 precision
-            precision = precision_score(run_y_true, run_y_pred, average='macro', zero_division=0)
-            # 🔸 recall
-            recall = recall_score(run_y_true, run_y_pred, average='macro', zero_division=0)
-            # 🔸 f1
-            f1 = f1_score(run_y_true, run_y_pred, average='macro', zero_division=0)
-            # 🔸 auc
-            auc_ovr = roc_auc_score(run_y_true, run_y_prob, multi_class='ovr') # macro-averaging by default - arithm mean, each class is treated equally 
-            auc_ovo = roc_auc_score(run_y_true, run_y_prob, multi_class='ovo')
-            # 🔸 mcc
-            mcc = matthews_corrcoef(run_y_true, run_y_pred)
-            # 🔸 inference time
-            inference_time = (end_time - start_time)/60
+            def pad_tensor(x, max_len):
+                if x.dim() == 1:
+                    return torch.cat([x, torch.zeros(max_len - x.size(0), device=x.device)])
+                else:
+                    return torch.cat([x, torch.zeros((max_len - x.size(0), x.size(1)), device=x.device)])
 
-            # ------------------------------------------------------------------------------------- #
+            run_y_true_pad = pad_tensor(run_y_true, max_size)
+            run_y_prob_pad = pad_tensor(run_y_prob, max_size)
+            run_y_pred_pad = pad_tensor(run_y_pred, max_size)
 
-            # print
-            print(f'Training loss: {loss:.3f}, accuracy: {accuracy:.3f}, auc_ovr: {auc_ovr:.3f}') # lets show just three metrics
+            true_gather = [torch.zeros_like(run_y_true_pad) for _ in range(world_size)]
+            prob_gather = [torch.zeros_like(run_y_prob_pad) for _ in range(world_size)]
+            pred_gather = [torch.zeros_like(run_y_pred_pad) for _ in range(world_size)]
+            loss_gather = [torch.zeros_like(run_loss_tensor) for _ in range(world_size)]
+            time_gather = [torch.zeros_like(elapsed_time) for _ in range(world_size)]
 
-            # tensorboard
-            if tb: # 📍 
-                writer.add_scalar('train_metrics/loss', loss, epoch+1)
-                writer.add_scalar('train_metrics/accuracy' , accuracy, epoch+1)
-                writer.add_scalar('train_metrics/precision', precision, epoch+1)
-                writer.add_scalar('train_metrics/recall', recall, epoch+1)
-                writer.add_scalar('train_metrics/f1', f1, epoch+1)
-                writer.add_scalar('train_metrics/auc_ovr' , auc_ovr, epoch+1)
-                writer.add_scalar('train_metrics/auc_ovo' , auc_ovo, epoch+1)
-                writer.add_scalar('train_metrics/mcc' , mcc, epoch+1)
-                writer.add_scalar('train_metrics/inference_time', inference_time, epoch+1)
+            torch.distributed.barrier()
 
-            # ⭐️
-            epoch_results['training']['loss'] = loss   
-            epoch_results['training']['accuracy'] = accuracy
-            epoch_results['training']['precision'] = precision
-            epoch_results['training']['recall'] = recall
-            epoch_results['training']['f1'] = f1
-            epoch_results['training']['auc_ovr'] = auc_ovr
-            epoch_results['training']['auc_ovo'] = auc_ovo
-            epoch_results['training']['mcc'] = mcc
-            epoch_results['training']['inference_time'] = inference_time
-            
+            # all_gather from all GPU
+            dist.all_gather(true_gather, run_y_true_pad)
+            dist.all_gather(prob_gather, run_y_prob_pad)
+            dist.all_gather(pred_gather, run_y_pred_pad)
+            dist.all_gather(loss_gather, run_loss_tensor)
+            dist.all_gather(time_gather, elapsed_time)
+
+            if dist.get_rank() == 0:
+                all_true, all_prob, all_pred = [], [], []
+                for i in range(world_size):
+                    n = sizes_list[i].item()
+                    all_true.append(true_gather[i][:n])
+                    all_prob.append(prob_gather[i][:n])
+                    all_pred.append(pred_gather[i][:n])
+
+                y_true = torch.cat(all_true).cpu().numpy()
+                y_prob = torch.cat(all_prob).cpu().numpy()
+                y_pred = torch.cat(all_pred).cpu().numpy()
+                avg_loss = torch.stack(loss_gather).mean().item()
+                avg_time = torch.stack(time_gather).mean().item()
+
+                # Compute metrics
+                accuracy = accuracy_score(y_true, y_pred)
+                precision = precision_score(y_true, y_pred, average='macro', zero_division=0)
+                recall = recall_score(y_true, y_pred, average='macro', zero_division=0)
+                f1 = f1_score(y_true, y_pred, average='macro', zero_division=0)
+                auc_ovr = roc_auc_score(y_true, y_prob, multi_class='ovr')
+                auc_ovo = roc_auc_score(y_true, y_prob, multi_class='ovo')
+                mcc = matthews_corrcoef(y_true, y_pred)
+
+                print(f"[Train] Loss: {avg_loss:.4f}, Acc: {accuracy:.4f}, F1: {f1:.4f}, Time: {avg_time:.2f}min")
+
+                # tensorboard
+                if tb: # 📍 
+                    writer.add_scalar('train_metrics/loss', avg_loss, epoch+1)
+                    writer.add_scalar('train_metrics/accuracy' , accuracy, epoch+1)
+                    writer.add_scalar('train_metrics/precision', precision, epoch+1)
+                    writer.add_scalar('train_metrics/recall', recall, epoch+1)
+                    writer.add_scalar('train_metrics/f1', f1, epoch+1)
+                    writer.add_scalar('train_metrics/auc_ovr' , auc_ovr, epoch+1)
+                    writer.add_scalar('train_metrics/auc_ovo' , auc_ovo, epoch+1)
+                    writer.add_scalar('train_metrics/mcc' , mcc, epoch+1)
+                    writer.add_scalar('train_metrics/inference_time', avg_time, epoch+1)
+
+                # ⭐️
+                epoch_results['training']['loss'] = avg_loss   
+                epoch_results['training']['accuracy'] = accuracy
+                epoch_results['training']['precision'] = precision
+                epoch_results['training']['recall'] = recall
+                epoch_results['training']['f1'] = f1
+                epoch_results['training']['auc_ovr'] = auc_ovr
+                epoch_results['training']['auc_ovo'] = auc_ovo
+                epoch_results['training']['mcc'] = mcc
+                epoch_results['training']['inference_time'] = avg_time
+                
 
             # 2. ❓ Validation
             print('Validation')
@@ -355,67 +390,96 @@ def training(config, rank, world_size):
                     
                     # ----------- ✍ batch record ------------- #
                     #run_images.append(images.detach().cpu().numpy())     #
-                    run_y_true.append(y_true.detach().cpu().numpy())     #
-                    run_y_prob.append(y_prob.detach().cpu().numpy())     #
-                    run_y_pred.append(y_pred.detach().cpu().numpy())     #
+                    run_y_true.append(y_true.detach())     #
+                    run_y_prob.append(y_prob.detach())     #
+                    run_y_pred.append(y_pred.detach())     #
                     run_loss += loss.item()                     #
                     # ----------------------------------------- # 
 
-            # --------------------------------- ✍ run metrics ---------------------------------- #
+                # --------------------------------- ✍ run metrics ---------------------------------- #
 
-            #run_images = np.concatenate(run_images)
-            run_y_true = np.concatenate(run_y_true)
-            run_y_prob = np.concatenate(run_y_prob)
-            run_y_pred = np.concatenate(run_y_pred)
-            end_time = time.time()
+                #run_images = np.concatenate(run_images)
+                run_y_true = torch.cat(run_y_true, dim=0)
+                run_y_prob = torch.cat(run_y_prob, dim=0)
+                run_y_pred = torch.cat(run_y_pred, dim=0)
+                run_loss_tensor = torch.tensor([run_loss / len(loader)], device=device)
+                elapsed_time = torch.tensor([(time.time() - start_time) / 60], device=device)
 
+                # -------- Distributed Gathering -------- #
+                local_size = torch.tensor([run_y_true.size(0)], device=device)
+                sizes_list = [torch.zeros_like(local_size) for _ in range(world_size)]
+                dist.all_gather(sizes_list, local_size)
+                max_size = max([s.item() for s in sizes_list])
 
-            # 🔸 loss
-            run_loss = run_loss / len(loader)
-            # 🔸 accuracy
-            correct_predictions = sum(1 for true, pred in zip(run_y_true, run_y_pred) if true == pred)
-            accuracy = correct_predictions / len(run_y_true)
-            # 🔸 precision
-            precision = precision_score(run_y_true, run_y_pred, average='macro', zero_division=0)
-            # 🔸 recall
-            recall = recall_score(run_y_true, run_y_pred, average='macro', zero_division=0)
-            # 🔸 f1
-            f1 = f1_score(run_y_true, run_y_pred, average='macro', zero_division=0)
-            # 🔸 auc
-            auc_ovr = roc_auc_score(run_y_true, run_y_prob, multi_class='ovr') # macro-averaging by default - arithm mean, each class is treated equally 
-            auc_ovo = roc_auc_score(run_y_true, run_y_prob, multi_class='ovo')
-            # 🔸 mcc
-            mcc = matthews_corrcoef(run_y_true, run_y_pred)
-            # 🔸 inference time
-            inference_time = (end_time - start_time)/60
+                run_y_true_pad = pad_tensor(run_y_true, max_size)
+                run_y_prob_pad = pad_tensor(run_y_prob, max_size)
+                run_y_pred_pad = pad_tensor(run_y_pred, max_size)
 
-            if tb: # 📍
-                writer.add_scalar('val_metrics/loss', loss, epoch+1)
-                writer.add_scalar('val_metrics/accuracy' , accuracy, epoch+1)
-                writer.add_scalar('val_metrics/precision', precision, epoch+1)
-                writer.add_scalar('val_metrics/recall', recall, epoch+1)
-                writer.add_scalar('val_metrics/f1', f1, epoch+1)
-                writer.add_scalar('val_metrics/auc_ovr' , auc_ovr, epoch+1)
-                writer.add_scalar('val_metrics/auc_ovo' , auc_ovo, epoch+1)
-                writer.add_scalar('val_metrics/mcc' , mcc, epoch+1)
-                writer.add_scalar('val_metrics/inference_time', inference_time, epoch+1)
+                true_gather = [torch.zeros_like(run_y_true_pad) for _ in range(world_size)]
+                prob_gather = [torch.zeros_like(run_y_prob_pad) for _ in range(world_size)]
+                pred_gather = [torch.zeros_like(run_y_pred_pad) for _ in range(world_size)]
+                loss_gather = [torch.zeros_like(run_loss_tensor) for _ in range(world_size)]
+                time_gather = [torch.zeros_like(elapsed_time) for _ in range(world_size)]
 
-            # ⭐️
-            epoch_results['validation']['loss'] = loss   
-            epoch_results['validation']['accuracy'] = accuracy
-            epoch_results['validation']['precision'] = precision
-            epoch_results['validation']['recall'] = recall
-            epoch_results['validation']['f1'] = f1
-            epoch_results['validation']['auc_ovr'] = auc_ovr
-            epoch_results['validation']['auc_ovo'] = auc_ovo
-            epoch_results['validation']['mcc'] = mcc
-            epoch_results['validation']['inference_time'] = inference_time
+                torch.distributed.barrier()
+                dist.all_gather(true_gather, run_y_true_pad)
+                dist.all_gather(prob_gather, run_y_prob_pad)
+                dist.all_gather(pred_gather, run_y_pred_pad)
+                dist.all_gather(loss_gather, run_loss_tensor)
+                dist.all_gather(time_gather, elapsed_time)
+
+                if dist.get_rank() == 0:
+                    all_true, all_prob, all_pred = [], [], []
+                    for i in range(world_size):
+                        n = sizes_list[i].item()
+                        all_true.append(true_gather[i][:n])
+                        all_prob.append(prob_gather[i][:n])
+                        all_pred.append(pred_gather[i][:n])
+
+                    y_true = torch.cat(all_true).cpu().numpy()
+                    y_prob = torch.cat(all_prob).cpu().numpy()
+                    y_pred = torch.cat(all_pred).cpu().numpy()
+                    avg_loss = torch.stack(loss_gather).mean().item()
+                    avg_time = torch.stack(time_gather).mean().item()
+
+                    # Compute metrics
+                    accuracy = accuracy_score(y_true, y_pred)
+                    precision = precision_score(y_true, y_pred, average='macro', zero_division=0)
+                    recall = recall_score(y_true, y_pred, average='macro', zero_division=0)
+                    f1 = f1_score(y_true, y_pred, average='macro', zero_division=0)
+                    auc_ovr = roc_auc_score(y_true, y_prob, multi_class='ovr')
+                    auc_ovo = roc_auc_score(y_true, y_prob, multi_class='ovo')
+                    mcc = matthews_corrcoef(y_true, y_pred)
+
+                    print(f"[Validation] Loss: {avg_loss:.4f}, Acc: {accuracy:.4f}, F1: {f1:.4f}, Time: {avg_time:.2f}min")
+
+                    if tb: # 📍
+                        writer.add_scalar('val_metrics/loss', avg_loss, epoch+1)
+                        writer.add_scalar('val_metrics/accuracy' , accuracy, epoch+1)
+                        writer.add_scalar('val_metrics/precision', precision, epoch+1)
+                        writer.add_scalar('val_metrics/recall', recall, epoch+1)
+                        writer.add_scalar('val_metrics/f1', f1, epoch+1)
+                        writer.add_scalar('val_metrics/auc_ovr' , auc_ovr, epoch+1)
+                        writer.add_scalar('val_metrics/auc_ovo' , auc_ovo, epoch+1)
+                        writer.add_scalar('val_metrics/mcc' , mcc, epoch+1)
+                        writer.add_scalar('val_metrics/inference_time', avg_time, epoch+1)
+
+                    # ⭐️
+                    epoch_results['validation']['loss'] = avg_loss   
+                    epoch_results['validation']['accuracy'] = accuracy
+                    epoch_results['validation']['precision'] = precision
+                    epoch_results['validation']['recall'] = recall
+                    epoch_results['validation']['f1'] = f1
+                    epoch_results['validation']['auc_ovr'] = auc_ovr
+                    epoch_results['validation']['auc_ovo'] = auc_ovo
+                    epoch_results['validation']['mcc'] = mcc
+                    epoch_results['validation']['inference_time'] = avg_time
 
             # 🔸 confusion matrix for the last epoch
-            if epoch+1 == epochs:
-                fig = fig_confusion_matrix(y_true = run_y_true, y_pred = run_y_pred)
-                if tb: # 📍
-                    writer.add_figure("val_confusion_matrix", fig)
+            #if epoch+1 == epochs:
+            #    fig = fig_confusion_matrix(y_true = run_y_true, y_pred = run_y_pred)
+            #    if tb: # 📍
+            #        writer.add_figure("val_confusion_matrix", fig)
             
             # 🔸 per class stat - here for each combination (i - true class, j - predicted class) lets track percent and images
             # just want to see how many images of class i were predicted as class j (0/1/2) and show them on the last epoch as example
@@ -447,8 +511,6 @@ def training(config, rank, world_size):
                                 
             # --------------------------------------------------------------------------------------- #
                     
-            print(f'Validation loss: {loss:.3f}, accuracy: {accuracy:.3f}, auc_ovr: {auc_ovr:.3f}')
-
             scheduler.step() # adjust the learning rate
         
             # ⭐️
@@ -489,6 +551,6 @@ if __name__ == "__main__":
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
 
-    mp.spawn(training, args=(world_size, config), nprocs=world_size, join=True)
+    mp.spawn(training, args=(config, world_size), nprocs=world_size, join=True)
 
     #python experiments/2025-W3-01-13/training.py --config experiments/2025-W3-01-13/configs/EfficientNet_b0.yaml
