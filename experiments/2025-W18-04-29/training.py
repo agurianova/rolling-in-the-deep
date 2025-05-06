@@ -137,8 +137,8 @@ def training(rank, config, world_size):
         num_workers = config['dataloader']['num_workers'] #                                                                 .
         # ࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐࿐
 
-        loader_t = DataLoader(dataset_t, batch_size=batch_size, num_workers=num_workers, sampler=DistributedSampler(dataset_t, num_replicas=world_size, rank=rank, shuffle=True)) # 🪄
-        loader_v = DataLoader(dataset_v, batch_size=batch_size, num_workers=num_workers, sampler=DistributedSampler(dataset_v, num_replicas=world_size, rank=rank, shuffle=False)) # 🪄  
+        loader_t = DataLoader(dataset_t, batch_size=batch_size, num_workers=num_workers, pin_memory=True, sampler=DistributedSampler(dataset_t, num_replicas=world_size, rank=rank, shuffle=True)) # 🪄
+        loader_v = DataLoader(dataset_v, batch_size=batch_size, num_workers=num_workers, pin_memory=True, sampler=DistributedSampler(dataset_v, num_replicas=world_size, rank=rank, shuffle=False)) # 🪄  
 
 
         # 3. 🪷 Model
@@ -361,7 +361,7 @@ def training(rank, config, world_size):
             loader = loader_v #🧺
 
             # --------------------------------- ✍ run record ---------------------------------- #
-            run_images = [] #🔜
+            #run_images = [] #🔜
             run_y_true = [] #🔜
             run_y_prob = [] #🔜
             run_y_pred = [] #🔜
@@ -544,13 +544,11 @@ if __name__ == "__main__":
     parser.add_argument('--config',type=str)
     args = parser.parse_args()
 
-    config = load_config(args.config) #'experiments/2025-W3-01-13/configs/EfficientNet_b0.yaml'
+    config = load_config(args.config)
     print('Config is loaded..')
 
-    world_size = 2  # Number of GPUs
+    world_size = torch.cuda.device_count()  # Number of GPUs
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
 
     mp.spawn(training, args=(config, world_size), nprocs=world_size, join=True)
-
-    #python experiments/2025-W3-01-13/training.py --config experiments/2025-W3-01-13/configs/EfficientNet_b0.yaml
