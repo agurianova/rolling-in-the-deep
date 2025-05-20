@@ -1,37 +1,34 @@
-# DeepVariant baseline model replacement study
+# Deep Learning Methods for Variant Calling from NGS Data
 
-In this repository, we focus on improving the predictive performance of DeepVariant framework developed by Google for variant identification in genomic data. Our primary goal is to explore alternative neural network architectures and evaluate their performance to improve the accuracy of DeepVariant.
+In this repository, we evaluate whether neural network architecture has a significant impact on predictive performance in the context of variant calling using DeepVariant framework.
 
 ## Project Overview
 
-DeepVariant frames the task of variant identification as an image classification problem and works in general terms in two steps:
-1. **Image Generation**: The sequencing data is transformed into images that encode nucleotides, alignment quality, and other relevant parameters.
-2. **Image Classification**: The generated images are passed through a neural network (originally based on the Inception architecture) to classify them into one of three categories: homozygous alternate, heterozygous, and homozygous reference.
+DeepVariant frames the task of variant identification as an image classification problem and works in two steps:
+1. **Variant representation:** Sequencing data is transformed into images that encode nucleotides, alignment quality, and other relevant features.
+2. **Classification:** Generated images are passed through a neural network (originally based on the Inception architecture) to classify them into one of three categories: homozygous alternate, heterozygous, and homozygous reference.
 
-Since the release of DeepVariant, Google has continuously expanded the training data to improve its accuracy. There are also studies that have improved accuracy by adding new features or retraining the model on new data (Step 1). However, to date, there has been no research exploring alternative architectures for the classification (Step 2). 
+Commonly explored approaches to improve variant calling performance include increasing or modifying training data. However, to date, there has been no research exploring the role of neural network architectures on classification step. 
 
 ![Image](images/fig_1.png)
 
-Since the release of Inception in 2017, newer architectures have already surpassed Inception in image classification tasks on well-known public datasets. This led us to hypothesize that improving DeepVariant’s accuracy could be achieved by modifying the architecture rather than solely focusing on increasing or altering the training data.
+Since the release of Inception, newer architectures have already surpassed Inception in image classification tasks on public datasets. This led us to hypothesize that improving of variant calling accuracy could be achieved by modifying the architecture rather than solely focusing on the training data.
 
 ![Image](images/fig_2.png)
 
 ## Objective
 
-Our main objective is to compare the performance of the original Inception model with alternative neural network architectures, to test the hypothesis that altering the network architecture can lead to improved accuracy.
+Our main objective is to compare the performance of the original Inception model with alternative neural network architectures and test the hypothesis that modern architectures can lead to improved accuracy.
 
-## Interim Results
+## Results
 
-1. We have developed and tested a pipeline for model training on a dataset of 30,000 samples. We observed that RegNetY model shows consistent improvements in F1-score and AUC across all folds on variant images, with statistically significant results (p = 0.0312).
+1. We have developed and tested a pipeline for model training. We observed that EfficientNet and RegNet show consistent improvements in accuracy and f1-score, primarily due to a notable improvement in precision. This indicates that performance is improved due to decreased false positive rate and enhances reliability of variant predictions, supporting its use in high-confidence calling scenarios.
 
-![Image](images/fig_3.png)
-
-2. Benchmark scores do not guarantee real variant calling accuracy — models like ResNeXt and EfficientNet fall short, highlighting the importance of architecture and parameter count.
-3. Follow-up analysis — motivated by these insights, we decided to include in analysis additional largest CNN ConvNeXt model (~200M parameters) to further explore how model scale influences variant calling performance.
+2. Benchmark scores on real-world images do not guarantee real variant calling accuracy — ResNeXt model fall short, highlighting the importance of testing the accuracy in domain-specific tasks such as variant calling.
 
 ## Directory Structure
 
-- `data/deepvariant/`: Contains the genomic data files and a CSV file (`data_subset_size.csv`) with metadata about the dataset (needed for image downloading in training.py).
+- `data/deepvariant/`: Contains PNG files and a CSV file (`data_subset_size.csv`) with metadata about the dataset (needed for image downloading in training.py).
 - `docker/`: Includes a `Dockerfile` for creating environment.
 - `experiments/`: Main directory - stores experiment configurations, results, and logs. Each experiment is organized by timestamp (e.g., `2025-W12-03-20`), containing:
   - `configs/`: files for training models (keep training and validation parameters).
