@@ -1,0 +1,33 @@
+data:
+  dir: '/data/glusterfs/agurianova/data/deepvariant/images500k/data_subset_500000.csv'
+
+cross_val_folds: 10
+
+dataset_T:
+  padding: [1, 62, 2, 62] 
+
+dataloader:
+  batch_size: 128 #(256-512)
+  num_workers: 8 #(16)
+
+model:
+  name: "inception_v3"
+  classes: 3
+  channels: 7
+
+training:
+  hyper:
+    loss:
+      type: "CrossEntropyLoss"
+    optimizer:
+      type: "Adam"
+      lr: 0.001
+    scheduler:
+      type: "StepLR"  
+      step_size: 5 
+      gamma: 0.1
+  num_epochs: 15
+  tensorboard: false
+  tensorboard_dir: "experiments/2025-W18-04-29/tb/inception_v3_500000"
+
+pickle_path: "experiments/2025-W18-04-29/results/inception_v3_500000.pkl"
