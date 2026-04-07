@@ -5,9 +5,9 @@
   <g transform="translate(120,32)">
 
     <g transform="translate(-55,-1)">
-      <rect x="-16" y="-11" width="32" height="18" rx="3" fill="#808080"/>
-      <line x1="0" y1="7" x2="0" y2="14" stroke="#808080" stroke-width="2"/>
-      <line x1="-8" y1="14" x2="8" y2="14" stroke="#808080" stroke-width="2"/>
+      <rect x="-16" y="-11" width="32" height="18" rx="3" fill="black"/>
+      <line x1="0" y1="7" x2="0" y2="14" stroke="black" stroke-width="2"/>
+      <line x1="-8" y1="14" x2="8" y2="14" stroke="black" stroke-width="2"/>
       <line x1="-10" y1="-5" x2="10" y2="-5" stroke="#BDD5E7" stroke-width="1.8"/>
       <line x1="-10" y1="1" x2="6" y2="1" stroke="#BDD5E7" stroke-width="1.8"/>
     </g>
@@ -17,7 +17,7 @@
           text-anchor="middle"
           font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
           font-size="30"
-          fill="#808080"
+          fill="black"
           font-weight="600">
       Slides
     </text>
