@@ -1,11 +1,25 @@
 <div align="center">
 
-# Deep Learning Methods for Variant Calling from NGS Data  
-**Master's Thesis Project**
+<img src="https://news.cuanschutz.edu/hubfs/Department%20of%20Biomedical%20Infomatics/52524%20junk%20DNA.png"
+     alt="DNA visualization"
+     width="800"
+     style="border-radius: 10px; opacity: 0.25;" />
 
-<br>
+<h1>
+Deep Learning Methods for Variant Calling<br>
+</h1>
 
-[Slides](https://docs.google.com/presentation/d/1xR4ioWilqR6fLwffzHBgfCsK5R6zG-Ou/edit?usp=sharing&ouid=111238708985253381146&rtpof=true&sd=true) | [Defense](https://youtu.be/i6OqCpfdnAY?si=xjITalZX-aISt_lr&t=3298)
+<p><strong>Master's Thesis Project</strong></p>
+
+<p>
+  <a href="https://docs.google.com/presentation/d/1xR4ioWilqR6fLwffzHBgfCsK5R6zG-Ou/edit?usp=sharing&ouid=111238708985253381146&rtpof=true&sd=true">
+    Slides
+  </a>
+   &nbsp;|&nbsp; 
+  <a href="https://youtu.be/i6OqCpfdnAY?si=xjITalZX-aISt_lr&t=3298">
+    Defense
+  </a>
+</p>
 
 </div>
 
