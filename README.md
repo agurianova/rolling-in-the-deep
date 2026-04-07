@@ -12,7 +12,7 @@ Deep Learning Methods for Variant Calling<br>
 <p><strong>Master's Thesis Project</strong></p>
 
 <p>
-  <a href="https://docs.google.com/presentation/d/1xR4ioWilqR6fLwffzHBgfCsK5R6zG-Ou/edit?usp=sharing&ouid=111238708985253381146&rtpof=true&sd=true">
+  <a href="https://drive.google.com/file/d/1Wv_D9xOa79J2z3SO22s0QFRjZ7WBd-Fw/view?usp=sharing">
     Slides
   </a>
    &nbsp;|&nbsp; 
