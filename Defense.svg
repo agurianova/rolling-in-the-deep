@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="64" viewBox="0 0 240 64">
+
+  <!-- Background -->
+  <rect width="240" height="64" rx="32" fill="#6c63ff"/>
+
+  <!-- YouTube icon -->
+  <g transform="translate(70,32)">
+    <rect x="-18" y="-11" width="36" height="22" rx="8" fill="white"/>
+    <polygon points="-5,-7 9,0 -5,7" fill="#6c63ff"/>
+  </g>
+
+  <!-- Text -->
+  <text x="155" y="34"
+        dominant-baseline="middle"
+        text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
+        font-size="18"
+        fill="white"
+        font-weight="600"
+        letter-spacing="0.3">
+    Defense
+  </text>
+
+</svg>
