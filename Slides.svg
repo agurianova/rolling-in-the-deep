@@ -4,7 +4,6 @@
 
   <g transform="translate(120,32)">
 
-    <!-- Icon (чуть вверх) -->
     <g transform="translate(-55,-1)">
       <rect x="-16" y="-11" width="32" height="18" rx="3" fill="white"/>
       <line x1="0" y1="7" x2="0" y2="14" stroke="white" stroke-width="2"/>
