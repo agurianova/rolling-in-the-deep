@@ -1,30 +1,39 @@
-# Deep Learning Methods for Variant Calling from NGS Data
+<div align="center">
 
-In this repository, we evaluate whether neural network architecture has a significant impact on predictive performance in the context of variant calling using DeepVariant framework.
+# Deep Learning Methods for Variant Calling from NGS Data  
+**Master's Thesis Project**
 
-## Project Overview
+<br>
 
-DeepVariant frames the task of variant identification as an image classification problem and works in two steps:
-1. **Variant representation:** Sequencing data is transformed into images that encode nucleotides, alignment quality, and other relevant features.
-2. **Classification:** Generated images are passed through a neural network (originally based on the Inception architecture) to classify them into one of three categories: homozygous alternate, heterozygous, and homozygous reference.
+[Slides](https://docs.google.com/presentation/d/1xR4ioWilqR6fLwffzHBgfCsK5R6zG-Ou/edit?usp=sharing&ouid=111238708985253381146&rtpof=true&sd=true) | [Defense](https://youtu.be/i6OqCpfdnAY?si=xjITalZX-aISt_lr&t=3298)
 
-Commonly explored approaches to improve variant calling performance include increasing or modifying training data. However, to date, there has been no research exploring the role of neural network architectures on classification step. 
+</div>
 
-![Image](images/fig_1.png)
+---
 
-Since the release of Inception, newer architectures have already surpassed Inception in image classification tasks on public datasets. This led us to hypothesize that improving of variant calling accuracy could be achieved by modifying the architecture rather than solely focusing on the training data.
+## Overview
+<img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" height="20" style="vertical-align:middle"/> **[DeepVariant](https://github.com/google/deepvariant)** transforms variant calling from NGS data into an image classification problem:
 
-![Image](images/fig_2.png)
+**Input:** Sequencing data encoded as images (nucleotides, alignment, quality etc)  
+**Output:** Images classified as hom ref/het/hom alt
 
 ## Objective
+Test if modern architectures beat **Inception baseline**:
 
-Our main objective is to compare the performance of the original Inception model with alternative neural network architectures and test the hypothesis that modern architectures can lead to improved accuracy.
+| Model                | Role       | Parameters | F1 Score             |
+|----------------------|------------|------------|----------------------|
+| Inception         | Baseline   | 27.2M      | 0.9302 ± 0.0156      |
+| ResNeXt     | 🧪 Tested  | 83.5M      | 0.9426 ± 0.0167 ↑ †  |
+| RegNet           | 🧪 Tested  | 145.0M     | 0.9458 ± 0.0184 ↑ *  |
+| **EfficientNet**  | 🧪 Tested  | 66.3M  | 0.9565 ± 0.0178 ↑ ** |
 
-## Results
+** p<0.01, * p<0.05, † p<0.1
 
-1. We have developed and tested a pipeline for model training. We observed that EfficientNet and RegNet show consistent improvements in accuracy and f1-score, primarily due to a notable improvement in precision. This indicates that performance is improved due to decreased false positive rate and enhances reliability of variant predictions, supporting its use in high-confidence calling scenarios.
+## Key Findings
+EfficientNet and RegNet improve F1-score and reduce false positives compared to Inception. However, superior performance on general image benchmarks does not necessarily translate to variant calling (ResNeXt). Domain-specific evaluation remains critical.
 
-2. Benchmark scores on real-world images do not guarantee real variant calling accuracy — ResNeXt model fall short, highlighting the importance of testing the accuracy in domain-specific tasks such as variant calling.
+## Acknowledgments
+ITMO University Master's program.
 
 ## Directory Structure
 
