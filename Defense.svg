@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="240" height="64" viewBox="0 0 240 64">
 
   <!-- Background -->
-  <rect width="240" height="64" rx="32" fill="#6c63ff"/>
+  <rect width="240" height="64" rx="32" fill="#16213e"/>
 
   <!-- YouTube icon -->
   <g transform="translate(70,32)">
