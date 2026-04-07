@@ -46,7 +46,22 @@ Test if modern architectures beat **Inception baseline**:
 EfficientNet and RegNet improve F1-score and reduce false positives compared to Inception. However, superior performance on general image benchmarks does not necessarily translate to variant calling (ResNeXt). Domain-specific evaluation remains critical.
 
 ## Acknowledgments
-ITMO University Master's program.
+<p align="center">
+  Conducted as part of the Master’s program at
+</p>
+
+<p align="center">
+  <a href="https://itmo.ru/en/](https://www.facebook.com/itmo.uni/">
+    <img src="https://itmo.ru/file/pages/213/slogan_na_plashke_belyy-01.png" height="60"/>
+  </a>
+</p>
+
+<p align="center">
+  <span style="font-size: 14px;">
+    <img src="https://api.iconify.design/tabler/map-pin-filled.svg?color=%239d4edd" height="18" style="vertical-align: -3px; margin-right: 6px;"/>
+    <b>Saint Petersburg, Russia</b>
+  </span>
+</p>
 
 ## Directory Structure
 
