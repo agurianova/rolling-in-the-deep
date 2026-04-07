@@ -9,13 +9,13 @@
 Deep Learning Methods for Variant Calling<br>
 </h1>
 
-<p><strong>Master's Thesis Project</strong></p>
+<h3><strong>Master's Thesis Project</strong></h3>
 
 <p align="center">
   <a href="https://youtu.be/i6OqCpfdnAY?si=xjITalZX-aISt_lr&t=3298">
-    <img src="Defense.svg" height="30" style="border-radius: 16px 0 0 16px; margin-right: -2px;"/>
+    <img src="Defense.svg" height="40" style="border-radius: 16px 0 0 16px; margin-right: -2px;"/>
   </a><a href="https://drive.google.com/file/d/1Wv_D9xOa79J2z3SO22s0QFRjZ7WBd-Fw/view?usp=sharing">
-    <img src="Slides.svg" height="30" style="border-radius: 0 16px 16px 0;"/>
+    <img src="Slides.svg" height="40" style="border-radius: 0 16px 16px 0;"/>
   </a>
 </p>
 
