@@ -5,7 +5,7 @@
   <g transform="translate(120,32)">
 
     <g transform="translate(-55,-1.5)">
-      <rect x="-18" y="-10" width="36" height="22" rx="8" fill="#808080"/>
+      <rect x="-18" y="-10" width="36" height="22" rx="8" fill="black"/>
       <polygon points="-5,-6 10,1 -5,8" fill="#BDD5E7"/>
     </g>
 
@@ -14,7 +14,7 @@
           text-anchor="middle"
           font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
           font-size="28"
-          fill="#808080"
+          fill="black"
           font-weight="600">
       Defense
     </text>
