@@ -13,11 +13,11 @@ Deep Learning Methods for Variant Calling<br>
 
 <p>
   <a href="https://drive.google.com/file/d/1Wv_D9xOa79J2z3SO22s0QFRjZ7WBd-Fw/view?usp=sharing">
-    Slides
+    📑 Slides
   </a>
    &nbsp;|&nbsp; 
   <a href="https://youtu.be/i6OqCpfdnAY?si=xjITalZX-aISt_lr&t=3298">
-    Defense
+    📹 Defense
   </a>
 </p>
 
