@@ -51,7 +51,7 @@ EfficientNet and RegNet improve F1-score and reduce false positives compared to 
 </p>
 
 <p align="center">
-  <a href="https://itmo.ru/en/](https://www.facebook.com/itmo.uni/">
+  <a href="https://www.facebook.com/itmo.uni/">
     <img src="https://itmo.ru/file/pages/213/slogan_na_plashke_belyy-01.png" height="60"/>
   </a>
 </p>
