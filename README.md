@@ -25,10 +25,7 @@ Deep Learning Methods for Variant Calling<br>
 ---
 
 ## Overview
-<img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" height="20" style="vertical-align:middle"/> **[DeepVariant](https://github.com/google/deepvariant)** transforms variant calling from NGS data into an image classification problem:
-
-**Input:** Sequencing data encoded as images (nucleotides, alignment, quality etc)  
-**Output:** Images classified as hom ref/het/hom alt
+<img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" height="20" style="vertical-align:middle"/> **[DeepVariant](https://github.com/google/deepvariant)** transforms variant calling from NGS data into an image classification problem: sequencing data are encoded as images (e.g., nucleotides, alignments, quality scores) and and uses the Inception architecture to classify variants as homozygous reference, heterozygous, or homozygous alternate.
 
 ## Objective
 Test if modern architectures beat **Inception baseline**:
@@ -38,7 +35,7 @@ Test if modern architectures beat **Inception baseline**:
 | Inception         | Baseline   | 27.2M      | 0.9302 ± 0.0156      |
 | ResNeXt     | 🧪 Tested  | 83.5M      | 0.9426 ± 0.0167 ↑ †  |
 | RegNet           | 🧪 Tested  | 145.0M     | 0.9458 ± 0.0184 ↑ *  |
-| **EfficientNet**  | 🧪 Tested  | 66.3M  | 0.9565 ± 0.0178 ↑ ** |
+| EfficientNet  | 🧪 Tested  | 66.3M  | 0.9565 ± 0.0178 ↑ ** |
 
 ** p<0.01, * p<0.05, † p<0.1
 
